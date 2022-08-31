@@ -6,7 +6,7 @@ module.exports.loop = function () {
     const maxHarvesterCount = 3;
     const maxUpgraderCount = 2;
     const maxBuilderCount = 5;
-    const maxCreepsInEachResourse = 3;
+
     //清除不存在的Creep内存
     for(var name in Memory.creeps) {
         if(!Game.creeps[name]) {
@@ -15,12 +15,12 @@ module.exports.loop = function () {
         }
     }
 
-    //生成Creeps
+    //产卵
     if(Game.spawns['Spawn1'].spawning == null)
     {
         if(roles.harvestersCount < maxHarvesterCount) {
             var newName = 'Harvester' + Game.time;
-            if(Game.spawns['Spawn1'].spawnCreep([WORK,CARRY,MOVE], newName, {memory: {role: 'harvester'}}) == 0)
+            if(Game.spawns['Spawn1'].spawnCreep([WORK,CARRY,CARRY,MOVE], newName, {memory: {role: 'harvester'}}) == 0)
             {
                 console.log('[Spawn1] 生成新的采集者: ' + newName);
             }

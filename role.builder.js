@@ -1,31 +1,28 @@
+var workLogic = require('workLogic');
+
+function LogAsCreep(creep,message)
+{
+    console.log("[Creep]["+ creep.name +"] " + message)
+}
 var roleBuilder = {
 
     /** @param {Creep} creep **/
     run: function(creep,sourceManager) {
-
-	    if(creep.memory.building && creep.store[RESOURCE_ENERGY] == 0) {
-            creep.memory.building = false;
-            creep.say('🔄 harvest');
-	    }
-	    if(!creep.memory.building && creep.store.getFreeCapacity() == 0) {
-	        creep.memory.building = true;
-	        creep.say('🚧 build');
-	    }
-
-	    if(creep.memory.building) {
-	        var targets = creep.room.find(FIND_CONSTRUCTION_SITES);
-            if(targets.length) {
-                if(creep.build(targets[0]) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
-                }
-            }
-	    }
-	    else {
-	        var sources = creep.room.find(FIND_SOURCES);
-            if(creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(sources[0], {visualizePathStyle: {stroke: '#ffaa00'}});
-            }
-	    }
+		var target = creep.memory.target;
+        if(creep.spawning)//产卵不用管
+        {
+            creep.memory.task = 'spawning';
+            creep.memory.target = null;
+            return;
+        }
+        if(target == null || target == undefined || creep.memory.task == 'waiting')//新建任务
+        {
+            if(creep.store.getFreeCapacity() > 0)
+                workLogic.StartHarvestTask(creep,sourceManager,true);
+            else
+                workLogic.StartBuildTask(creep,sourceManager,true);
+        }   
+        workLogic.Work(creep,sourceManager)
 	}
 };
 
