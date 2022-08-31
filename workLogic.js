@@ -92,7 +92,7 @@ function StartRepairTask(creep,sourceManager = null,Outputlog = false)
             var healthPercent = targets[name].hits/targets[name].hitsMax
             if(targetHealthPercent > healthPercent);
             {
-                damagestTarget = target[name];
+                damagestTarget = targets[name];
                 targetHealthPercent = healthPercent;
             }
         }
