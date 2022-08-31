@@ -1,11 +1,10 @@
-var roles = require('role');
-
 module.exports.loop = function () {
 
     //生成目标参数
     const maxHarvesterCount = 3;
     const maxUpgraderCount = 3;
     const maxBuilderCount = 3;
+    const maxRepairerCount = 1;
 
     //清除不存在的Creep内存
     for(var name in Memory.creeps) {
@@ -14,31 +13,44 @@ module.exports.loop = function () {
             console.log('[System] 清除不存在的Creep内存:', name);
         }
     }
+    
+    var harvestersCount = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester').length;
+    var upgradersCount = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader').length;
+    var buildersCount = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder').length;
+    var repairersCount = _.filter(Game.creeps, (creep) => creep.memory.role == 'repairer').length;
 
+    var roles = require('role');
     //产卵
     if(Game.spawns['Spawn1'].spawning == null)
     {
-        if(roles.harvestersCount < maxHarvesterCount) {
+        if(harvestersCount < maxHarvesterCount) {
             var newName = 'Harvester' + Game.time;
             if(Game.spawns['Spawn1'].spawnCreep([WORK,CARRY,CARRY,MOVE], newName, {memory: {role: 'harvester'}}) == 0)
             {
                 console.log('[Spawn1] 生成新的采集者: ' + newName);
             }
         }
-        else if(roles.upgradersCount < maxUpgraderCount) {
+        else if(upgradersCount < maxUpgraderCount) {
             var newName = 'Upgrader' + Game.time;
-            if(Game.spawns['Spawn1'].spawnCreep([WORK,CARRY,MOVE], newName, {memory: {role: 'upgrader'}}) == 0)
+            if(Game.spawns['Spawn1'].spawnCreep([WORK,WORK,CARRY,CARRY,MOVE], newName, {memory: {role: 'upgrader'}}) == 0)
             {
                 console.log('[Spawn1] 生成新的升级者: ' + newName);
             }
         }
-        else if(roles.buildersCount < maxBuilderCount) {
+        else if(repairersCount < maxRepairerCount) {
+            var newName = 'Repairer' + Game.time;
+            if(Game.spawns['Spawn1'].spawnCreep([WORK,CARRY,MOVE,MOVE], newName, {memory: {role: 'repairer'}}) == 0)
+            {
+                console.log('[Spawn1] 生成新的修复者: ' + newName);
+            }
+        }
+        else if(buildersCount < maxBuilderCount) {
             var newName = 'Builder' + Game.time;
             if(Game.spawns['Spawn1'].spawnCreep([WORK,CARRY,MOVE], newName, {memory: {role: 'builder'}}) == 0)
             {
                 console.log('[Spawn1] 生成新的建造者: ' + newName);
             }
-        }
+        } 
     }
     
     //运行Creeps职业逻辑

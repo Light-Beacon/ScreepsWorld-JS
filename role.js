@@ -1,6 +1,7 @@
 var roleHarvester = require('role.harvester');
 var roleUpgrader = require('role.upgrader');
 var roleBuilder = require('role.builder');
+var roleRepair = require('role.repairer');
 
 var sourceManager = require('sourceManager')
 
@@ -10,6 +11,8 @@ var roles = {
     harvestersCount: _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester').length,
     upgradersCount: _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader').length,
     buildersCount: _.filter(Game.creeps, (creep) => creep.memory.role == 'builder').length,
+    repairersCount: _.filter(Game.creeps, (creep) => creep.memory.role == 'repairer').length,
+    //分配默认任务
     RunAllCreeps: function(){
         for(var name in Game.creeps) {
             var creep = Game.creeps[name];
@@ -21,6 +24,9 @@ var roles = {
             }
             if(creep.memory.role == 'builder') {
                 roleBuilder.run(creep,sourceManager);
+            }
+            if(creep.memory.role == 'repairer') {
+                roleRepair.run(creep,sourceManager);
             }
         }
         /*

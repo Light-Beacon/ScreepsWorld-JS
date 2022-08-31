@@ -18,9 +18,9 @@ var roleBuilder = {
         if(target == null || target == undefined || creep.memory.task == 'waiting')//新建任务
         {
             if(creep.store.getFreeCapacity() > 0)
-                workLogic.StartHarvestTask(creep,sourceManager,true);
+                workLogic.StartHarvestTask(creep,sourceManager);
             else
-                workLogic.StartBuildTask(creep,sourceManager,true);
+                workLogic.StartBuildTask(creep,sourceManager);
         }   
         workLogic.Work(creep,sourceManager)
 	}

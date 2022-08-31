@@ -1,4 +1,4 @@
-const MaxCreepInEachSource = 3;//每个能量源最大容载爬量
+const MaxCreepInEachSource = 4;//每个能量源最大容载爬量
 function FindNearestAvailableSource(room,pos)
 {
     if(room.memory.sourcesMarks == undefined)

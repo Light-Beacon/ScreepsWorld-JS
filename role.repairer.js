@@ -15,7 +15,7 @@ var roleUpgrader = {
             if(creep.store.getFreeCapacity() > 0)
                 workLogic.StartHarvestTask(creep,sourceManager);
             else
-                workLogic.StartUpgradeTask(creep,sourceManager);
+                workLogic.StartRepairTask(creep,null,true);
         }   
         workLogic.Work(creep,sourceManager)
 	}

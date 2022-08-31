@@ -2,6 +2,7 @@ const HarvestPathStroke = '#ffaa00' //采集任务路径描边：亮橙色
 const TransportStroke = '#ffffff' //搬运任务路径描边：白色
 const BuildPathStroke = '#99ffaa' //建造任务描边：绿色
 const UpgradePathStroke = '#99aaff' //升级任务描边：蓝色
+const RepairPathStroke = '#aa00ff' //修复任务描边：紫色
 
 function LogAsCreep(creep,message)
 {
@@ -28,7 +29,7 @@ function StartHarvestTask(creep,sourceManager,Outputlog = false)
 
 function StartTransportTask(creep,sourceManager = null,Outputlog = false)
 {
-    var targets = creep.room.find(FIND_STRUCTURES,{
+    var targets = creep.room.find(FIND_MY_STRUCTURES,{
         filter: (structure) => {
             return (structure.structureType == STRUCTURE_EXTENSION ||
                     structure.structureType == STRUCTURE_SPAWN ||
@@ -66,6 +67,50 @@ function StartUpgradeTask(creep,sourceManager = null,Outputlog = false)
     creep.memory.target = creep.room.controller.id;
     if(Outputlog) LogAsCreep(creep,"新建任务：升级 目标ID：" + creep.memory.target);
 }
+
+function StartRepairTask(creep,sourceManager = null,Outputlog = false)
+{
+    creep.memory.task = 'repair';
+    var targets = creep.room.find(FIND_MY_STRUCTURES,{
+        filter: (structure) => {
+            return structure.hits < structure.hitsMax;
+        }
+    });
+    if(!targets.length){
+        targets = creep.room.find(FIND_STRUCTURES,{
+            filter: (structure) => {
+                return structure.hits < structure.hitsMax;
+            }
+        });
+    }
+    if(targets.length)
+    {
+        var damagestTarget = targets[0];
+        var targetHealthPercent = damagestTarget.hits/damagestTarget.hitsMax;
+        for(var name in targets)
+        {
+            var healthPercent = targets[name].hits/targets[name].hitsMax
+            if(targetHealthPercent > healthPercent);
+            {
+                damagestTarget = target[name];
+                targetHealthPercent = healthPercent;
+            }
+        }
+        creep.memory.task = 'repair';
+        creep.memory.target = damagestTarget.id;
+        if(Outputlog) LogAsCreep(creep,"新建任务：修复 目标ID：" + creep.memory.target);
+    }else{
+        if(Outputlog) LogAsCreep(creep,"创建修复任务失败:没有可供修复的对象！尝试创建搬运任务");
+        StartTransportTask(creep,sourceManager = null,Outputlog);
+    }
+}
+
+function EndTask(creep,log = false)
+{
+    creep.memory.target = null;
+    creep.memory.task = 'waiting';
+    if(log) LogAsCreep(creep,"任务结束，切换到待命状态。" );
+}
     
 var Tasks = {
     //执行各种任务的主要逻辑
@@ -73,6 +118,10 @@ var Tasks = {
     {
         target = creep.memory.target;
         targetObj = Game.getObjectById(target)
+        if(targetObj == null || targetObj == undefined)
+        {
+            EndTask(creep,log);
+        }
         //采集任务
         if(creep.memory.task == 'harvest')
         {
@@ -84,9 +133,7 @@ var Tasks = {
             else
             {
                 sourceManager.UnMarkSource(targetObj);
-                creep.memory.target = null;
-                creep.memory.task = 'waiting';
-                if(log) LogAsCreep(creep,"任务结束，切换到待命状态。" );
+                EndTask(creep,log);
             }
         }
         //搬运任务
@@ -96,11 +143,9 @@ var Tasks = {
             if(creep.transfer(targetObj, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                 creep.moveTo((targetObj), {visualizePathStyle: {stroke: TransportStroke}});
             }
-            if(creep.store.getFreeCapacity() > 0)
+            if(creep.store[RESOURCE_ENERGY] == 0 || targetObj.store.getFreeCapacity(RESOURCE_ENERGY) == 0)
             {
-                creep.memory.target = null;
-                creep.memory.task = 'waiting'
-                if(log) LogAsCreep(creep,"任务结束，切换到待命状态。");
+                EndTask(creep,log);
             }
         }
         //建造任务
@@ -110,13 +155,12 @@ var Tasks = {
             if(creep.build(targetObj)  == ERR_NOT_IN_RANGE) {
                 creep.moveTo((targetObj), {visualizePathStyle: {stroke: BuildPathStroke}});
             }
-            if(creep.store[RESOURCE_ENERGY] == 0)
+            if(creep.store[RESOURCE_ENERGY] == 0 || targetObj.progress >= targetObj.progressTotal)
             {
-                creep.memory.target = null;
-                creep.memory.task = 'waiting'
-                if(log) LogAsCreep(creep,"任务结束，切换到待命状态。");
+                EndTask(creep,log);
             }
         }
+        //升级任务
         if(creep.memory.task == 'upgrade')
         {
             if(log) LogAsCreep(creep,"进行升级任务" + target);
@@ -125,16 +169,27 @@ var Tasks = {
             }
             if(creep.store[RESOURCE_ENERGY] == 0)
             {
-                creep.memory.target = null;
-                creep.memory.task = 'waiting'
-                if(log) LogAsCreep(creep,"任务结束，切换到待命状态。");
+                EndTask(creep,log);
+            }
+        }
+        //修复任务
+        if(creep.memory.task == 'repair')
+        {
+            if(log) LogAsCreep(creep,"进行修复任务" + target);
+            if(creep.repair(targetObj)  == ERR_NOT_IN_RANGE) {
+                creep.moveTo((targetObj), {visualizePathStyle: {stroke: RepairPathStroke}});
+            }
+            if(creep.store[RESOURCE_ENERGY] == 0 || targetObj.hits == targetObj.hitsMax)
+            {
+                EndTask(creep,log);
             }
         }
     },
     StartHarvestTask:function(creep,sourceManager,log = false){StartHarvestTask(creep,sourceManager,log)},
     StartTransportTask:function(creep,sourceManager = null,log = false){StartTransportTask(creep,sourceManager,log)},
     StartBuildTask:function(creep,sourceManager = null,log = false){StartBuildTask(creep,sourceManager,log)},
-    StartUpgradeTask:function(creep,sourceManager = null,log = false){StartUpgradeTask(creep,sourceManager,log)}
+    StartUpgradeTask:function(creep,sourceManager = null,log = false){StartUpgradeTask(creep,sourceManager,log)},
+    StartRepairTask:function(creep,sourceManager = null,log = false){StartRepairTask(creep,sourceManager,log)}
 }
 
 module.exports = Tasks;
