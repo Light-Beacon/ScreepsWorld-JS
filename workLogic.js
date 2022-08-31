@@ -8,6 +8,65 @@ function LogAsCreep(creep,message)
     console.log("[Creep]["+ creep.name +"] " + message)
 }
 
+function StartHarvestTask(creep,sourceManager,Outputlog = false)
+{
+    if(Outputlog) LogAsCreep(creep,"准备开始新任务");
+        //Give Creep a new task
+    if(creep.store.getFreeCapacity() > 0) {
+        var source = sourceManager.FindNASource(creep)
+        if(source == null)
+        {
+            if(Outputlog) LogAsCreep(creep,"FNA返回空值，待命");
+            return;
+        }
+        creep.memory.target = source.id;
+        if(Outputlog) LogAsCreep(creep,"新建任务：采集 目标ID：" + creep.memory.target);
+        creep.say('🔄');
+        creep.memory.task = 'harvest';
+    }
+}
+
+function StartTransportTask(creep,sourceManager = null,Outputlog = false)
+{
+    var targets = creep.room.find(FIND_STRUCTURES,{
+        filter: (structure) => {
+            return (structure.structureType == STRUCTURE_EXTENSION ||
+                    structure.structureType == STRUCTURE_SPAWN ||
+                    structure.structureType == STRUCTURE_TOWER) && 
+                    structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
+        }
+    });
+    if(targets.length)
+    {
+        creep.memory.task = 'transport';
+        creep.memory.target = targets[0].id;
+        if(Outputlog) LogAsCreep(creep,"新建任务：搬运 目标ID：" + creep.memory.target);
+    }else{
+        if(Outputlog) LogAsCreep(creep,"创建搬运任务失败:没有可供搬运的对象！尝试创建升级任务");
+        StartUpgradeTask(creep,sourceManager = null,Outputlog);
+    }
+}
+
+function StartBuildTask(creep,sourceManager = null,Outputlog = false)
+{
+    var targets = creep.room.find(FIND_CONSTRUCTION_SITES);
+    if(targets.length)
+    {
+        creep.memory.task = 'build';
+        creep.memory.target = targets[0].id;
+        if(Outputlog) LogAsCreep(creep,"新建任务：建造 目标ID：" + creep.memory.target);
+    }else{
+        if(Outputlog) LogAsCreep(creep,"创建建造任务失败:没有可供建造的对象！");
+    }
+}
+
+function StartUpgradeTask(creep,sourceManager = null,Outputlog = false)
+{
+    creep.memory.task = 'upgrade';
+    creep.memory.target = creep.room.controller.id;
+    if(Outputlog) LogAsCreep(creep,"新建任务：升级 目标ID：" + creep.memory.target);
+}
+    
 var Tasks = {
     //执行各种任务的主要逻辑
     Work:function(creep,sourceManager,log = false)
@@ -72,61 +131,10 @@ var Tasks = {
             }
         }
     },
-    StartHarvestTask:function(creep,sourceManager,log = false)
-    {
-        if(log) LogAsCreep(creep,"准备开始新任务");
-            //Give Creep a new task
-        if(creep.store.getFreeCapacity() > 0) {
-            var source = sourceManager.FindNASource(creep)
-            if(source == null)
-            {
-                if(log) LogAsCreep(creep,"FNA返回空值，待命");
-                return;
-            }
-            creep.memory.target = source.id;
-            if(log) LogAsCreep(creep,"新建任务：采集 目标ID：" + creep.memory.target);
-            creep.say('🔄');
-            creep.memory.task = 'harvest';
-        }
-    },
-    StartTransportTask:function(creep,sourceManager = null,log = false)
-    {
-        var targets = creep.room.find(FIND_STRUCTURES,{
-            filter: (structure) => {
-                return (structure.structureType == STRUCTURE_EXTENSION ||
-                        structure.structureType == STRUCTURE_SPAWN ||
-                        structure.structureType == STRUCTURE_TOWER) && 
-                        structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
-            }
-        });
-        if(targets.length)
-        {
-            creep.memory.task = 'transport';
-            creep.memory.target = targets[0].id;
-            if(log) LogAsCreep(creep,"新建任务：搬运 目标ID：" + creep.memory.target);
-        }else{
-            if(log) LogAsCreep(creep,"创建搬运任务失败:没有可供搬运的对象！");
-        }
-    },
-    StartBuildTask:function(creep,sourceManager = null,log = false)
-    {
-        var targets = creep.room.find(FIND_CONSTRUCTION_SITES);
-        if(targets.length)
-        {
-            creep.memory.task = 'build';
-            creep.memory.target = targets[0].id;
-            if(log) LogAsCreep(creep,"新建任务：建造 目标ID：" + creep.memory.target);
-        }else{
-            if(log) LogAsCreep(creep,"创建建造任务失败:没有可供建造的对象！");
-        }
-    },
-    StartUpgradeTask:function(creep,sourceManager = null,log = false)
-    {
-        creep.memory.task = 'upgrade';
-        creep.memory.target = creep.room.controller.id;
-        if(log) LogAsCreep(creep,"新建任务：升级 目标ID：" + creep.memory.target);
-    }
-
+    StartHarvestTask:function(creep,sourceManager,log = false){StartHarvestTask(creep,sourceManager,log)},
+    StartTransportTask:function(creep,sourceManager = null,log = false){StartTransportTask(creep,sourceManager,log)},
+    StartBuildTask:function(creep,sourceManager = null,log = false){StartBuildTask(creep,sourceManager,log)},
+    StartUpgradeTask:function(creep,sourceManager = null,log = false){StartUpgradeTask(creep,sourceManager,log)}
 }
 
 module.exports = Tasks;
