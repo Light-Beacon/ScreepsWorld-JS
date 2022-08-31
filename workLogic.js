@@ -1,6 +1,7 @@
 const HarvestPathStroke = '#ffaa00' //采集任务路径描边：亮橙色
 const TransportStroke = '#ffffff' //搬运任务路径描边：白色
 const BuildPathStroke = '#99ffaa' //建造任务描边：绿色
+const UpgradePathStroke = '#99aaff' //升级任务描边：蓝色
 
 function LogAsCreep(creep,message)
 {
@@ -57,6 +58,19 @@ var Tasks = {
                 if(log) LogAsCreep(creep,"任务结束，切换到待命状态。");
             }
         }
+        if(creep.memory.task == 'upgrade')
+        {
+            if(log) LogAsCreep(creep,"进行升级任务" + target);
+            if(creep.upgradeController(creep.room.controller)  == ERR_NOT_IN_RANGE) {
+                creep.moveTo((targetObj), {visualizePathStyle: {stroke: UpgradePathStroke}});
+            }
+            if(creep.store[RESOURCE_ENERGY] == 0)
+            {
+                creep.memory.target = null;
+                creep.memory.task = 'waiting'
+                if(log) LogAsCreep(creep,"任务结束，切换到待命状态。");
+            }
+        }
     },
     StartHarvestTask:function(creep,sourceManager,log = false)
     {
@@ -105,6 +119,12 @@ var Tasks = {
         }else{
             if(log) LogAsCreep(creep,"创建建造任务失败:没有可供建造的对象！");
         }
+    },
+    StartUpgradeTask:function(creep,sourceManager = null,log = false)
+    {
+        creep.memory.task = 'upgrade';
+        creep.memory.target = creep.room.controller.id;
+        if(log) LogAsCreep(creep,"新建任务：升级 目标ID：" + creep.memory.target);
     }
 
 }

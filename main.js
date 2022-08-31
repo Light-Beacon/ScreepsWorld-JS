@@ -4,7 +4,7 @@ module.exports.loop = function () {
 
     //生成目标参数
     const maxHarvesterCount = 3;
-    const maxUpgraderCount = 2;
+    const maxUpgraderCount = 5;
     const maxBuilderCount = 5;
 
     //清除不存在的Creep内存
