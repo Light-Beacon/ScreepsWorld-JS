@@ -1,10 +1,16 @@
+    const maxHarvesterCount = 4;
+    const maxUpgraderCount = 3;
+    const maxBuilderCount = 4;
+    const maxRepairerCount = 2;
+    const maxCreep = maxHarvesterCount + maxUpgraderCount  + maxBuilderCount + maxRepairerCount;
+
 module.exports.loop = function () {
 
     //生成目标参数
-    const maxHarvesterCount = 3;
-    const maxUpgraderCount = 3;
-    const maxBuilderCount = 3;
-    const maxRepairerCount = 1;
+    
+    if(Game.cpu.bucket == 10000) {
+        Game.cpu.generatePixel();
+    }
 
     //清除不存在的Creep内存
     for(var name in Memory.creeps) {
@@ -21,7 +27,7 @@ module.exports.loop = function () {
 
     var roles = require('role');
     //产卵
-    if(Game.spawns['Spawn1'].spawning == null)
+    if(Game.spawns['Spawn1'].spawning == null && Game.creeps.length < maxCreep)
     {
         if(harvestersCount < maxHarvesterCount) {
             var newName = 'Harvester' + Game.time;
